@@ -1,0 +1,3 @@
+[submodule "ext-lib/luth"]
+	path = ext-lib/luth
+	url = git@bitbucket.org:lazys-work/luth.git
