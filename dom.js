@@ -34,9 +34,11 @@ export class Elem {
         this.items = items;
         this.events = [];
         this.dattrs = [];
+        this.dclass = [];
     }
-    attrs(attrs) {
-        for (const k in attrs) this.dattrs.push([k, attrs[k]]);
+    attrs(...attrs_list) {
+        for (const attrs of attrs_list)
+            for (const k in attrs) this.dattrs.push([k, attrs[k]]);
         return this;
     }
     var(dvar = Elem.var_indexed) {
@@ -53,7 +55,8 @@ export class Elem {
         return this;
     }
     class(...dclass) {
-        return this.assign({dclass});
+        for (const klass in dclass) this.dclass.push(klass);
+        return this;
     }
     style(...styles) {
         return this.assign({dstyle: (this.dstyle ?? {}).assign(...styles)});
@@ -77,10 +80,10 @@ export class Elem {
         return document.createElement(this.name).let(e => {
             if (this.did) e.id = this.did;
             if (this.duid) e.uid = this.duid;
-            if (this.dclass) e.classList.add(...this.dclass);
             e.style.assign(this.dstyle ?? {});
             for (const [event, handle] of this.events) e.addEventListener(event, handle);
             for (const [key, value] of this.dattrs) e.setAttribute(key, value);
+            e.classList.add(...this.dclass);
             e.append(...children);
         });
     }

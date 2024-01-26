@@ -1,10 +1,12 @@
-# ext-lang
+# Ext-Lang
 
 一个JS的拓展库，包含一些辅助函数和一个DOM处理库
 
 ## Reference
 
-### 工具
+### Core
+
+JS语言相关和一些工具函数
 
 调试和打印相关:
 
@@ -121,4 +123,67 @@ Object.compose(...Function|[Function, ...<arg>]) -> <result>
 
 // if 的方法版本，传入参数不是函数时相当于是三元运算符
 Object.if(this => <result>|<value>, this => <result>|<value>) -> <result>|<value>
+
+// 生成函数的延后调用版本，会将 <later_fn>.a().b()() 变换为 <later_fn>().a().b()
+// 主要用于 DOM 拓展库
+Function.later -> LaterFunction
+```
+
+### Color
+
+颜色相关
+
+```js
+// 从 HEX 字符串或数字分量（0~255）构建颜色对象，可直接在 CSS 或 Canvas 等接口使用
+rgb(
+    String<hex_color>|Number<r> = 255,
+    Number<g> = 255,
+    Number<b> = 255,
+    Number<a> = 1
+) -> Color
+
+// 从 HSL 数字分量构建颜色对象
+hsl(Number<h>, Number<s>, Number<l>, Number<a> = 1) -> Color
+```
+
+### DOM
+
+DOM生成相关
+
+```js
+// 为 Elem 添加 Attributes, 接受任意数量的传入
+Elem.attrs(...Object<attrs>) -> this
+
+// 为 Elem 设置 id
+Elem.attrs(String<id>) -> this
+
+// 为 Elem 添加事件监听器
+Elem.on(String<event_name>, Function<handle>) -> this
+
+// 为 Elem 添加 Class, 接受任意数量的传入
+Elem.class(...String<class>) -> this
+
+// 为 Elem 添加样式，接受任意数量的传入
+Elem.style(...Object<styles>) -> this
+
+// 从 Elem 构建 Node 并置入 <children>, 但是不递归构建 Elem 自身的 items
+Elem.make(...Node<children>) -> Node
+
+// 从 Elem 递归构建 Node 并置入 <items>, 返回构建的 Node 和构建上下文
+Elem.create(Array<ctx> = []) -> [Node<result>, Array<ctx>]
+
+// 类似于 Elem.create() 但绑定到一个已存在的 Node 上，可选清除 Node 原有的子项
+Elem.attach(Node<parent>, Boolean<will_clean> = false) -> Node<this>
+
+// 利用 Elem 的规则更新一个已有的 Node, 可以指定默认更新规则
+Elem.update(Node<target>, Function<updater> = Elem.update_static) -> [Node<target>, Array<ctx>]
+
+// 生成一个指定类型的 Elem, 该函数为 later 函数
+elem(String<node_name>, ...Elem<items>) -> Elem<result>
+
+// 生成一个 Div 类型的 Elem, 该函数为 later 函数
+div(...Elem<items>) -> Elem<result>
+
+// 生成一个 Image 类型的 Elem, 该函数为 later 函数
+img(String<src>) -> Elem<result>
 ```
