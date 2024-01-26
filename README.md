@@ -183,10 +183,12 @@ Elem.make(...Node<children>) -> Node
 Elem.create(Array<ctx> = []) -> [Node<result>, Array<ctx>]
 
 // 类似于 Elem.create() 但绑定到一个已存在的 Node 上，可选清除 Node 原有的子项
-Elem.attach(Node<parent>, Boolean<will_clean> = false) -> Node<this>
+// Node 可以使用 CSS 选择器字符串
+Elem.attach(Node|String<parent>, Boolean<will_clean> = false) -> Node<this>
 
 // 利用 Elem 的规则更新一个已有的 Node, 可以指定默认更新规则
-Elem.update(Node<target>, Function<updater> = Elem.update_static) -> [Node<target>, Array<ctx>]
+// Node 可以使用 CSS 选择器字符串
+Elem.update(Node|String<target>, Function<updater> = Elem.update_static) -> [Node<target>, Array<ctx>]
 
 // 生成一个指定类型的 Elem, 该函数为 later 函数
 elem(String<node_name>, ...Elem<items>) -> Elem<result>
