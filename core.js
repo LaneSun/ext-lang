@@ -3,8 +3,6 @@
 
 // FIXME: 迭代器和数组乱象
 
-const global = globalThis;
-
 const syms = {};
 const s = name =>
     name in syms ? syms[name] : ((syms[name] = Symbol(name)), syms[name]);
@@ -75,8 +73,6 @@ ext_alias(Object, {
         return obj;
     },
 });
-
-const _counters = {};
 
 const _later_handler = {
     get(later, key) {
@@ -340,6 +336,9 @@ export class Range {
     }
     when(fn) {
         return this.values().when(fn);
+    }
+    [Symbol.iterator]() {
+        return this.values();
     }
 }
 
