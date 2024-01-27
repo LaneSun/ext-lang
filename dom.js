@@ -60,7 +60,7 @@ export class Elem {
         return this;
     }
     class(...dclass) {
-        for (const klass in dclass) this.dclass.push(klass);
+        for (const klass of dclass) this.dclass.push(klass);
         return this;
     }
     style(...styles) {
