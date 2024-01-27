@@ -121,6 +121,7 @@ export class Elem {
     }
 
     _update(elem, ctx, dupdate) {
+        self.bind_var(elem, ctx);
         const rupdate = this.dupdate ?? dupdate;
         return rupdate(this, elem, ctx, dupdate);
     }
@@ -128,8 +129,12 @@ export class Elem {
     static update_static = (self, elem, ctx, dupdate) => {
         const children = [self.items, [...elem.childNodes]].group_map(([item, e]) =>
             e ? _try_update(item, e, ctx, dupdate) : _try_create(item, ctx));
-        self.bind_var(elem, ctx);
         _update_children(elem, children);
+        return elem;
+    };
+
+    static update_self = (self, elem, ctx, dupdate) => {
+        elem = self.make(...elem.childNodes).let(e => elem.replaceWith(e));
         return elem;
     };
 
@@ -137,7 +142,6 @@ export class Elem {
         const children = [self.items, [...elem.childNodes]].group_map(([item, e]) =>
             e ? _try_update(item, e, ctx, dupdate) : _try_create(item, ctx));
         elem = self.make(...children).let(e => elem.replaceWith(e));
-        self.bind_var(elem, ctx);
         return elem;
     };
 
@@ -151,7 +155,6 @@ export class Elem {
         const nelem = mut_self(self, elem, ctx, dupdate);
         if (nelem !== elem) elem.replaceWith(nelem);
         _update_children(nelem, children);
-        self.bind_var(elem, ctx);
         return elem;
     };
 

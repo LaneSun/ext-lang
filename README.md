@@ -168,7 +168,10 @@ hsl(Number<h>, Number<s>, Number<l>, Number<a> = 1) => Color
 
 ### DOM
 
-#### DOM生成相关
+DOM 库包含一组工具用于函数式构建 DOM 节点的模版，
+另外还包含一系列策略来使用模版更新现有/已经生成过的 DOM 节点
+
+#### DOM 生成相关
 
 ```ts
 // 为 Elem 添加 Attributes, 接受任意数量的传入
@@ -201,15 +204,83 @@ Elem.attach(Node|String<parent>, Boolean<will_clean> = false) => Node<this>
 Elem.update(Node|String<target>, Function<updater> = Elem.update_static) => [Node<target>, Array<ctx>]
 
 // 生成一个指定类型的 Elem, 该函数为 later 函数
-elem(String<node_name>, ...Elem<items>) => Elem<result>
+// 传入的 <item> 除了可以是 Elem 类型外也可以是 String 等基本类型，也可以是直接的 DOM Node
+elem(String<node_name>, ...Elem<item>) => Elem<result>
 
 // 生成一个 Div 类型的 Elem, 该函数为 later 函数
-div(...Elem<items>) => Elem<result>
+div(...Elem<item>) => Elem<result>
 
 // 生成一个 Image 类型的 Elem, 该函数为 later 函数
 img(String<src>) => Elem<result>
+
+// 生成一个 Canvas 类型的 Elem, 该函数为 later 函数
+// 会自动在 Canvas 上绑定一个名叫 context 的属性，值为该 Canvas 的 2D 绘图上下文
+canvas(...Elem<item>) => Elem<result>
+```
+
+#### DOM 更新相关
+
+所有的更新策略本质是一个函数，形式如下:
+
+```ts
+(
+    Elem<self, 相当于 this>,
+    Node<node, 当前的节点引用>,
+    Array<ctx, 更新上下文>,
+    Function<updater, 上下文全局的更新策略>
+) => Node<result, 原先的节点引用/新创建的节点引用>
+```
+
+函数可以根据传入的参数判断是否需要重新构建节点和其子节点
+
+```ts
+// 更新策略：静态，这是不指定全局策略时的默认策略
+// 行为：
+//      不更新节点本身
+//      所有子节点按照默认规则更新
+//      当模版子节点和现有子节点的数量不匹配时，以模版为准创建/删除子节点
+Elem.update_static => Function
+
+// 更新策略：自身
+// 行为：
+//      重新 make 节点本身
+//      所有子项保持原样
+Elem.update_self => Function
+
+// 更新策略：动态
+// 行为：
+//      重新 make 节点本身
+//      其余和 static 一致
+Elem.update_dynamic => Function
+
+// 更新策略：重建
+// 行为：
+//      重新 create 节点本身
+//      不考虑默认规则直接重建所有子节点
+Elem.update_remake => Function
+
+// 更新策略：保持
+// 行为：
+//      不作更新，跳过该节点和所有子项
+Elem.update_const => Function
+
+// 更新策略：分离
+// 行为：
+//      根据传入参数决定行为
+//      <self_updater> 可选的参数为：
+//          Elem.mut_self_const: 保持节点本身不变
+//          Elem.mut_self_remake: 重构节点本身
+//      <items_updater> 可选的参数为：
+//          Elem.mut_items_const: 不更改子项
+//          Elem.mut_items_remake: 重构所有子项
+//          Elem.mut_items_by_pos: 默认行为，和 static 的子项策略一致
+//          Elem.mut_items_by_uid_loose: 在默认行为的基础上另外根据子项的 uid 是否变更来判断是否需要重构
+Elem.update_mut(
+    Function<self_updater> = Elem.mut_self_const,
+    Function<items_updater> = Elem.mut_items_by_pos,
+) => Function
 ```
 
 ### Luth
 
-请移步 [Luth](https://github.com/LaneSun/luth) 仓库查看
+详细参考请移步 [Luth](https://github.com/LaneSun/luth) 仓库查看
