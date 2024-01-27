@@ -35,6 +35,7 @@ export class Elem {
         this.events = [];
         this.dattrs = [];
         this.dclass = [];
+        this.handles_make = [];
     }
     attrs(...attrs_list) {
         for (const attrs of attrs_list)
@@ -52,6 +53,10 @@ export class Elem {
     }
     on(event, handle) {
         this.events.push([event, handle]);
+        return this;
+    }
+    on_make(...handle) {
+        this.handles_make.push(...handle);
         return this;
     }
     class(...dclass) {
@@ -83,8 +88,9 @@ export class Elem {
             e.style.assign(this.dstyle ?? {});
             for (const [event, handle] of this.events) e.addEventListener(event, handle);
             for (const [key, value] of this.dattrs) e.setAttribute(key, value);
-            e.classList.add(...this.dclass);
+            if (this.dclass.length) e.classList.add(...this.dclass);
             e.append(...children);
+            for (const handle of this.handles_make) handle(e, this);
         });
     }
     bind_var(elem, ctx) {
@@ -169,5 +175,6 @@ export class Elem {
 export const elem = ((name, ...items) => new Elem(name, ...items)).later;
 export const div = ((...items) => elem("div", ...items)).later;
 export const img = (src => elem("img").attrs({src})).later;
+export const canvas = ((...items) => elem("canvas", ...items).on_make(e => e.context = e.getContext("2d"))).later;
 
-globalThis.assign({elem, div, img});
+globalThis.assign({Elem, elem, div, img, canvas});

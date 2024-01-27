@@ -1,6 +1,6 @@
 # Ext-Lang
 
-一个JS的拓展库，包含一些辅助函数和一个DOM处理库
+一个JS的拓展集合库，包含一些辅助函数, DOM库, Tween库, Sketch库, Luth库
 
 ## 如何使用
 
@@ -18,7 +18,7 @@ import "./ext-lang/all.js";
 
 JS语言相关和一些工具函数
 
-调试和打印相关:
+#### 调试和打印相关
 
 ```js
 // 打印对象和追加信息到控制台，相当于 console.log(...<msg>, this)
@@ -40,7 +40,7 @@ Object.cc -> this
 Object.cr -> this
 ```
 
-原型和类相关:
+#### 原型和类相关
 
 ```js
 // new 关键字的方法型替代
@@ -56,7 +56,7 @@ Object.proto -> <prototype>
 Object.super -> Class<super>
 ```
 
-数据集合、迭代器映射相关:
+#### 数据集合、迭代器映射相关
 
 ```js
 // [...this] 的简写
@@ -122,7 +122,7 @@ Array.group_for((Array<remap_value>, this) => void) -> this
 Array.group_map((Array<remap_value>, this) => <result>) -> <result>[]
 ```
 
-链式和函数编程相关:
+#### 链式和函数编程相关
 
 ```js
 // 将 this 暂存并传入送入的函数，之后返回 this
@@ -141,7 +141,7 @@ Function.later -> LaterFunction
 
 ### Color
 
-颜色相关
+#### 颜色相关
 
 ```js
 // 从 HEX 字符串或数字分量（0~255）构建颜色对象，可直接在 CSS 或 Canvas 等接口使用
@@ -158,7 +158,7 @@ hsl(Number<h>, Number<s>, Number<l>, Number<a> = 1) -> Color
 
 ### DOM
 
-DOM生成相关
+#### DOM生成相关
 
 ```js
 // 为 Elem 添加 Attributes, 接受任意数量的传入
