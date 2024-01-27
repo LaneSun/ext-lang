@@ -209,3 +209,7 @@ div(...Elem<items>) => Elem<result>
 // 生成一个 Image 类型的 Elem, 该函数为 later 函数
 img(String<src>) => Elem<result>
 ```
+
+### Luth
+
+请移步 [Luth](https://github.com/LaneSun/luth) 仓库查看
