@@ -101,12 +101,6 @@ export class Elem {
                 ctx[this.dvar] = elem;
         }
     }
-    create(ctx = []) {
-        const children = this.items.map(item => _try_create(item, ctx));
-        const e = this.make(...children);
-        this.bind_var(e, ctx);
-        return [e, ctx];
-    }
     attach(parent, clear = false) {
         const [e, ctx] = this.create();
         if (clear)
@@ -115,11 +109,18 @@ export class Elem {
             _to_node(parent).append(e);
         return [e, ctx];
     }
-    update(elem, dupdate = Elem.update_static) {
-        const ctx = [];
+    create(ctx = []) {
+        return this._create(ctx);
+    }
+    _create(ctx) {
+        const children = this.items.map(item => _try_create(item, ctx));
+        const e = this.make(...children);
+        this.bind_var(e, ctx);
+        return [e, ctx];
+    }
+    update(elem, dupdate = Elem.update_static, ctx = []) {
         return [this._update(_to_node(elem), ctx, dupdate), ctx];
     }
-
     _update(elem, ctx, dupdate) {
         self.bind_var(elem, ctx);
         const rupdate = this.dupdate ?? dupdate;

@@ -260,9 +260,11 @@ ext_alias(Array.prototype, {
     foritems() {
         return this;
     },
-    group_map(fn) {
+    group_map(fn = null) {
         const groups = this.map(g => g.foritems());
-        return [...range(groups[0].length).map(i => fn(groups.map(g => g[i]), this))];
+        return fn ?
+            [...range(groups[0].length).map(i => fn(groups.map(g => g[i]), this))] :
+            [...range(groups[0].length).map(i => groups.map(g => g[i]))];
     },
     group_for(fn) {
         const groups = this.map(g => g.foritems());
@@ -303,6 +305,12 @@ export class Range {
     [Symbol.iterator]() {
         return this.values();
     }
+}
+
+Number.prototype[Symbol.iterator] = function() {
+    return (function *(end) {
+        for (let v = 0; v < end; v ++) yield v;
+    })(this);
 }
 
 export const range = (...args) => {

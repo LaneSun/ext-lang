@@ -109,7 +109,30 @@ Object.reverse() => Array
 
 // 创建 Range 迭代对象，可用于 for, 也可以直接使用常用迭代方法，迭代时包含 <start>, 不包含 <end>
 // 当参数不足时，填充顺序为 <end>, <start>, <step>
+// 当参数只有一个时，也可以直接用数字替代 range 调用，即 <num> => range(<num>)
 range(Number<start> = 0, Number<end> = Infinity, Number<step> = 1) => Range
+
+// 示例：使用 range 创建枚举
+[x, y, z] = range(); // x = 0, y = 1, z = 2
+
+// 上面的写法也可以转为
+[x, y, z] = INF;
+
+// 也可以用同样的方式创建字典枚举
+const DICT = {};
+[
+    DICT.x,
+    DICT.y,
+    DICT.z,
+    DICT.size,
+] = INF;
+DICT.ll; // DICT = {x: 0, y: 1, z: 2, size: 3}
+
+// 示例：使用 range 进行 for 循环
+for (const i of range(4)) i.ll;
+
+// 上面的写法也可以转为
+for (const i of 4) i.ll;
 
 // 未成熟方法！
 // 重新组合数组元素的对应子项并迭代，例如 [[1, 2], [3, 4]] 被重组为 [[1, 3], [2, 4]]
@@ -118,9 +141,9 @@ range(Number<start> = 0, Number<end> = Infinity, Number<step> = 1) => Range
 Array.group_for((Array<remap_value>, this) => void) => this
 
 // 未成熟方法！
-// 在 Array.group_for 的基础上进行 map 操作的版本
+// 在 Array.group_for 的基础上进行 map 操作的版本，可以不传参数，直接取得重组结果
 // 注意：结果不会重组回去
-Array.group_map((Array<remap_value>, this) => <result>) => <result>[]
+Array.group_map(((Array<remap_value>, this) => <result>)?) => <result>[]
 ```
 
 #### 链式和函数编程相关
@@ -152,11 +175,12 @@ await EventTarget.wait(String<event_name>) => Event<in_event>
 
 ### Math
 
-所有 Math 对象包含的方法中接受单参数的，都可以直接在数字上用 `Number.<method_name>` 取得结果
+所有 Math 对象包含的方法中接受单参数的，都可以直接在数字上用 `Number.<method_name>` 取得结果，
+其中 log 方法被更名为 ln 以防与 Core 库冲突
 
 接受双参数的，可以使用 `Number.<method_name>(arg2)` 取得结果
 
-另外在全局添加了除 `E` 以外的所有 Math 常量以及一个额外的 `TAU` 常量
+另外在全局添加了除 `E` 以外的所有 Math 常量以及额外的 `TAU`, `INF` 常量
 
 #### 额外数学方法
 

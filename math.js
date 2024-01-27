@@ -32,7 +32,7 @@ ext_reader(Number.prototype, {
     expm1() { return Math.expm1(this); },
     floor() { return Math.floor(this); },
     fround() { return Math.fround(this); },
-    log() { return Math.log(this); },
+    ln() { return Math.log(this); },
     log1p() { return Math.log1p(this); },
     log2() { return Math.log2(this); },
     log10() { return Math.log10(this); },
@@ -55,4 +55,5 @@ globalThis.assign({
     LN10: Math.LN10,
     LOG2E: Math.LOG2E,
     LOG10E: Math.LOG10E,
+    INF: Infinity,
 });
