@@ -113,6 +113,7 @@ range(Number<start> = 0, Number<end> = Infinity, Number<step> = 1) => Range
 
 // 未成熟方法！
 // 重新组合数组元素的对应子项并迭代，例如 [[1, 2], [3, 4]] 被重组为 [[1, 3], [2, 4]]
+// 当子项的数量不一致时，以第一个传参的数量为准
 // 当子项是对象时，方法的表现并不一定按照预期
 Array.group_for((Array<remap_value>, this) => void) => this
 
