@@ -187,6 +187,16 @@ await EventTarget.wait(String<event_name>) => Event<in_event>
 ```ts
 // 将 this 钳制到 min (包含) 和 max (包含) 之间
 Number.clamp(Number<min>, Number<max>) => Number
+
+// 创建一个结构为 [start_x, start_y, end_x, end_y] 的矩形盒
+Array<Class>.make_rect(Number<start_x>, Number<start_y>, Number<width>, Number<height>)
+    => [Number<start_x>, Number<start_y>, Number<end_x>, Number<end_y>]
+
+// 获得矩形盒的大小数组
+Array.rect_size => [Number<width>, Number<height>]
+
+// 合并两个矩形盒，取其并集
+Array.rect_merge(Array) => Array
 ```
 
 ### Color

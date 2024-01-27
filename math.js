@@ -15,6 +15,29 @@ ext_alias(Number.prototype, {
     },
 });
 
+ext_alias(Array.prototype, {
+    rect_merge(target) {
+        return [
+            Math.min(this[0], target[0]),
+            Math.min(this[1], target[1]),
+            Math.max(this[2], target[2]),
+            Math.max(this[3], target[3]),
+        ];
+    },
+});
+
+ext_reader(Array.prototype, {
+    rect_size() {
+        return [this[2] - this[0], this[3] - this[1]];
+    },
+});
+
+ext_alias(Array, {
+    make_rect(x, y, w, h) {
+        return [x, y, x + w, y + h];
+    },
+});
+
 ext_reader(Number.prototype, {
     abs() { return Math.abs(this); },
     acos() { return Math.acos(this); },
