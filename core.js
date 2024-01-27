@@ -39,11 +39,11 @@ const ext_sym = (klass, props) => {
         );
     }
 };
-const ext_alias = (klass, props) => {
+export const ext_alias = (klass, props) => {
     ext(klass, props);
     ext_sym(klass, props);
 };
-const ext_reader = (klass, props) => {
+export const ext_reader = (klass, props) => {
     const rprops = {};
     for (const k in props) {
         const fn = props[k];
@@ -270,12 +270,6 @@ ext_alias(Array.prototype, {
             if (fn(groups.map(g => g[i]), this) === exit) break;
         }
         return this;
-    },
-});
-
-ext_alias(Math, {
-    clamp(v, min, max) {
-        return Math.max(min, Math.min(max, v));
     },
 });
 

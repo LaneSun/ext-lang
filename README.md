@@ -150,6 +150,21 @@ await Function.wait(...<arg>) => <in_arg>[]
 await EventTarget.wait(String<event_name>) => Event<in_event>
 ```
 
+### Math
+
+所有 Math 对象包含的方法中接受单参数的，都可以直接在数字上用 `Number.<method_name>` 取得结果
+
+接受双参数的，可以使用 `Number.<method_name>(arg2)` 取得结果
+
+另外在全局添加了除 `E` 以外的所有 Math 常量以及一个额外的 `TAU` 常量
+
+#### 额外数学方法
+
+```ts
+// 将 this 钳制到 min (包含) 和 max (包含) 之间
+Number.clamp(Number<min>, Number<max>) => Number
+```
+
 ### Color
 
 #### 颜色相关
