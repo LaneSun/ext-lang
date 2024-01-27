@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script type="module">
+
+import "../all.js";
+import "../ext-lib/sketch.js";
+
+const [lbg, lmain, lui, layers_count] = INF;
+
+const [skt] = sketch.layers(layers_count)(
+    rect.pos(100, 100).size(10, 10)(),
+    rect.pos(200, 200).size(100, 100)(),
+).attach(document.body);
+
+</script>
