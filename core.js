@@ -74,34 +74,6 @@ ext_alias(Object, {
     },
 });
 
-const _later_handler = {
-    get(later, key) {
-        return (...args) => new Proxy(later.late(key, args), _later_handler);
-    },
-    apply(later, _, args) {
-        return later.call(args);
-    },
-};
-
-class Later extends Function {
-    constructor(fn, lates = []) {
-        super();
-        this.lates = lates;
-        this.fn = fn;
-    }
-    static proxy(...args) {
-        return new Proxy(new Later(...args), _later_handler);
-    }
-    call(args) {
-        let res = this.fn.apply(null, args);
-        for (const [key, args] of this.lates) res = res[key].apply(res, args);
-        return res;
-    }
-    late(key, args) {
-        return new Later(this.fn, this.lates.concat([[key, args]]));
-    }
-}
-
 ext_reader(Object.prototype, {
     class() {
         return this.constructor;
@@ -114,9 +86,6 @@ ext_reader(Object.prototype, {
     },
     collect() {
         return [...this];
-    },
-    later() {
-        return Later.proxy(this);
     },
     ll() {
         return this.log();
@@ -356,5 +325,57 @@ export const range = (...args) => {
 };
 
 globalThis.range = range;
+
+const _later_handler = {
+    get(later, key) {
+        return (...args) => new Proxy(later.late(key, args), _later_handler);
+    },
+    apply(later, _, args) {
+        return later.call(args);
+    },
+};
+
+class Later extends Function {
+    constructor(fn, lates = []) {
+        super();
+        this.lates = lates;
+        this.fn = fn;
+    }
+    static proxy(...args) {
+        return new Proxy(new Later(...args), _later_handler);
+    }
+    call(args) {
+        let res = this.fn.apply(null, args);
+        for (const [key, args] of this.lates) res = res[key].apply(res, args);
+        return res;
+    }
+    late(key, args) {
+        return new Later(this.fn, this.lates.concat([[key, args]]));
+    }
+}
+
+ext_reader(Function.prototype, {
+    later() {
+        return Later.proxy(this);
+    },
+});
+
+ext_alias(Function.prototype, {
+    wait(...args) {
+        return new Promise(res => {
+            this((...results) => res(results), ...args);
+        });
+    },
+});
+
+ext_alias(EventTarget.prototype, {
+    wait(name) {
+        return new Promise(res => {
+            this.addEventListener(name, e => res(e), {
+                once: true,
+            });
+        });
+    },
+});
 
 export const Sym = syms;

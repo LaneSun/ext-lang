@@ -139,6 +139,16 @@ Object.if(this => <result>|<value>, this => <result>|<value>) -> <result>|<value
 Function.later -> LaterFunction
 ```
 
+#### 异步相关
+
+```js
+// 将首位接受回调的函数变为 Promise 形式，返回值为回调传入的参数列表
+await Function.wait(...<arg>) -> <in_arg>[]
+
+// 将 EventTarget 的 Listener 变为一次性触发的 Promise, 返回值为传入的 Event
+await EventTarget.wait(String<event_name>) -> Event<in_event>
+```
+
 ### Color
 
 #### 颜色相关
