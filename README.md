@@ -20,7 +20,7 @@ JS语言相关和一些工具函数
 
 #### 调试和打印相关
 
-```js
+```ts
 // 打印对象和追加信息到控制台，相当于 console.log(...<msg>, this)
 Object.log(...<msg>) => this
 
@@ -42,7 +42,7 @@ Object.cr => this
 
 #### 原型和类相关
 
-```js
+```ts
 // new 关键字的方法型替代
 Class.new() => Object
 
@@ -58,7 +58,7 @@ Object.super => Class<super>
 
 #### 数据集合、迭代器映射相关
 
-```js
+```ts
 // [...this] 的简写
 Iter.collect => Array
 
@@ -124,7 +124,7 @@ Array.group_map((Array<remap_value>, this) => <result>) => <result>[]
 
 #### 链式和函数编程相关
 
-```js
+```ts
 // 将 this 暂存并传入送入的函数，之后返回 this
 Object.let(this => void) => this
 
@@ -141,7 +141,7 @@ Function.later => LaterFunction
 
 #### 异步相关
 
-```js
+```ts
 // 将首位接受回调的函数变为 Promise 形式，返回值为回调传入的参数列表
 await Function.wait(...<arg>) => <in_arg>[]
 
@@ -153,7 +153,7 @@ await EventTarget.wait(String<event_name>) => Event<in_event>
 
 #### 颜色相关
 
-```js
+```ts
 // 从 HEX 字符串或数字分量（0~255）构建颜色对象，可直接在 CSS 或 Canvas 等接口使用
 rgb(
     String<hex_color>|Number<r> = 255,
@@ -170,7 +170,7 @@ hsl(Number<h>, Number<s>, Number<l>, Number<a> = 1) => Color
 
 #### DOM生成相关
 
-```js
+```ts
 // 为 Elem 添加 Attributes, 接受任意数量的传入
 Elem.attrs(...Object<attrs>) => this
 
