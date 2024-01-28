@@ -190,13 +190,23 @@ Number.clamp(Number<min>, Number<max>) => Number
 
 // 创建一个结构为 [start_x, start_y, end_x, end_y] 的矩形盒
 Array<Class>.make_rect(Number<start_x>, Number<start_y>, Number<width>, Number<height>)
-    => [Number<start_x>, Number<start_y>, Number<end_x>, Number<end_y>]
+    => [Number<start_x>, Number<start_y>, Number<end_x>, Number<end_y>]<rect>
 
 // 获得矩形盒的大小数组
 Array.rect_size => [Number<width>, Number<height>]
 
+// 获得矩形盒的另一种表示
+Array.rect_box => [Number<x>, Number<y>, Number<width>, Number<height>]
+
 // 合并两个矩形盒，取其并集
-Array.rect_merge(Array) => Array
+Array.rect_merge(Array) => Array<rect>
+
+// 将矩形盒偏移 <x>, <y>
+Array.rect_move(Number<x>, Number<y>) => Array<rect>
+
+// 将矩形盒每个边扩张对应大小（可以是负数）
+Array.rect_grow(Number<left>, Number<top> = <left>, Number<right> = <left>, Number<bottom> = <top>)
+    => Array<rect>
 ```
 
 ### Color
@@ -332,5 +342,7 @@ Elem.update_mut(
 ```
 
 ### Luth
+
+Luth 库用于高级文本解析，使用递归下降解析方法，是一个正则表达式的代换工具箱
 
 详细参考请移步 [Luth](https://github.com/LaneSun/luth) 仓库查看

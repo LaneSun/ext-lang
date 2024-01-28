@@ -307,11 +307,32 @@ export class Range {
     }
 }
 
-Number.prototype[Symbol.iterator] = function() {
-    return (function *(end) {
-        for (let v = 0; v < end; v ++) yield v;
-    })(this);
-}
+ext_alias(Number, {
+    *from(v) {
+        if (v.next) while (true) {
+            const { done, value } = v.next();
+            if (!done)
+                yield value[1];
+            else return;
+        }
+        if (v instanceof Array) return v.map(e => e[1]);
+        return v;
+    },
+});
+
+const num_iterator = function *() {
+    for (let v = 0; v < this; v ++) yield v;
+};
+
+ext_alias(Number.prototype, {
+    value: num_iterator,
+    keys: num_iterator,
+    *entries() {
+        for (let v = 0; v < this; v ++) yield [v, v];
+    },
+});
+
+Number.prototype[Symbol.iterator] = num_iterator;
 
 export const range = (...args) => {
     switch (args.length) {

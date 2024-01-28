@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<script type="module">
+
+import "../all.js";
+import "../ext-lib/sketch.js";
+
+const [lboard, lchess, layers_count] = INF;
+const size = 8;
+const cell_size = 40
+
+const board =
+    size.map(_ =>
+        size.map(_ =>
+            Math.random() < 2/3 ? Math.random() < 1/2 ? true : false : null
+        ).collect
+    ).collect;
+
+sketch.layers(layers_count).shapes(
+    rect.layer(lboard)
+        .stroke("#777777", 3)
+        .pos(-cell_size/2, -cell_size/2)
+        .size(size * cell_size, size * cell_size)
+    (
+        ...size.map(x =>
+            size.map(y =>
+                rect.layer(lboard)
+                    .fill((x + y) % 2 === 0 ? "#aaaaaa" : "#d4d4d4").stroke("#777777", 0, 1)
+                    .pos(cell_size * x, cell_size * y)
+                    .size(cell_size, cell_size)()
+            ).collect
+        ).collect.flat().filter(v => v),
+    ),
+    ...board.map((line, x) =>
+        line.map((chess, y) =>
+            chess == null ? null :
+            chess ?
+                circle.layer(lchess)
+                    .fill("#ffffff").stroke("#aaaaaa", 0.5, 0.5)
+                    .pos(x * cell_size, y * cell_size)
+                    .radius(16)() :
+                circle.layer(lchess)
+                    .fill("#444444").stroke("#66666", 0.5, 0.5)
+                    .pos(x * cell_size, y * cell_size)
+                    .radius(16)()
+        )
+    ).flat().filter(v => v),
+)().attach(document.body);
+
+</script>

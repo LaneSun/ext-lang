@@ -24,11 +24,30 @@ ext_alias(Array.prototype, {
             Math.max(this[3], target[3]),
         ];
     },
+    rect_grow(s_x1, s_y1 = s_x1, s_x2 = s_x1, s_y2 = s_y1) {
+        return [
+            this[0] - s_x1,
+            this[1] - s_y1,
+            this[2] + s_x2,
+            this[3] + s_y2,
+        ];
+    },
+    rect_move(x, y) {
+        return [
+            this[0] + x,
+            this[1] + y,
+            this[2] + x,
+            this[3] + y,
+        ];
+    },
 });
 
 ext_reader(Array.prototype, {
     rect_size() {
         return [this[2] - this[0], this[3] - this[1]];
+    },
+    rect_box() {
+        return [this[0], this[1], this[2] - this[0], this[3] - this[1]];
     },
 });
 
