@@ -44,6 +44,11 @@ sketch.layers(layers_count).shapes(
                     .radius(16)()
         )
     ).flat().filter(v => v),
+    text.layer(lboard)
+        .content("SKETCH")
+        .font(`bold ${cell_size * 1.5}px sans-serif`).color("#00000044")
+        .pos(cell_size * (size - 1) / 2, cell_size * (size - 1) / 2)
+        .center()(),
 )().attach(document.body);
 
 </script>

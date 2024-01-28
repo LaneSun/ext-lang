@@ -191,7 +191,7 @@ class ShapeRect extends ShapePath {
         this.rsize = [x, y];
         return this;
     }
-    _get_size(ctx) {
+    _get_size() {
         return this.rsize;
     }
     _get_fill_path() {
@@ -213,7 +213,7 @@ class ShapeCicle extends ShapePath {
         this.rradius = r;
         return this;
     }
-    _get_size(ctx) {
+    _get_size() {
         return [this.rradius * 2, this.rradius * 2];
     }
     _get_fill_path() {
@@ -230,11 +230,63 @@ class ShapeCicle extends ShapePath {
     }
 }
 
+class ShapeText extends Shape {
+    rcontent = "";
+    rfont = "16px monospace";
+    rcolor = "#000000";
+    rmetrics = null;
+    content(content = "") {
+        this.rcontent = content;
+        return this;
+    }
+    font(font = "16px monospace") {
+        this.rfont = font;
+        return this;
+    }
+    color(color = "#000000") {
+        this.rcolor = color;
+        return this;
+    }
+    _get_size(ctx) {
+        if (this.rmetrics === null) {
+            const c = ctx.sketch_contexts[this.rlayer];
+            c.save();
+            this._apply_style(c);
+            this.rmetrics = c.measureText(this.rcontent);
+            c.restore();
+        }
+        return [
+            this.rmetrics.actualBoundingBoxLeft + this.rmetrics.actualBoundingBoxRight,
+            this.rmetrics.actualBoundingBoxAscent + this.rmetrics.actualBoundingBoxDescent,
+        ];
+    }
+    _apply_style(pen) {
+        pen.font = this.rfont;
+    }
+    _get_fill_path() {
+        const path = new Path2D();
+        path.rect(0, 0, ...this.rsize);
+        return path;
+    }
+    _get_stroke_path(offset) {
+        const path = new Path2D();
+        path.rect(...[0, 0, ...this.rsize].rect_grow(offset).rect_box);
+        return path;
+    }
+    _draw(pen, ctx) {
+        pen.save();
+        this._apply_style(pen);
+        pen.fillStyle = this.rcolor;
+        pen.fillText(this.rcontent, this.rmetrics.actualBoundingBoxLeft, this.rmetrics.actualBoundingBoxAscent);
+        pen.restore();
+    }
+}
+
 export const sketch = ((...shapes) => new Sketch(...shapes)).later;
 export const shape = ((...shapes) => new Shape(...shapes)).later;
 export const rect = ((...shapes) => new ShapeRect(...shapes)).later;
 export const circle = ((...shapes) => new ShapeCicle(...shapes)).later;
 export const dot = ((...shapes) => new Shape(...shapes)).later;
-export const text = ((...shapes) => new Shape(...shapes)).later;
+export const text = ((...shapes) => new ShapeText(...shapes)).later;
 
 globalThis.assign({Sketch, Shape, sketch, shape, rect, circle, dot, text});
