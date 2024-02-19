@@ -26,7 +26,19 @@ sketch.layers(layers_count).shapes(
                 rect.layer(lboard)
                     .fill((x + y) % 2 === 0 ? "#aaaaaa" : "#d4d4d4").stroke("#777777", 0, 1)
                     .pos(cell_size * x, cell_size * y)
-                    .size(cell_size, cell_size)()
+                    .size(cell_size, cell_size)
+                    .let(s => {
+                        if (board[x][y] === null)
+                            s.area({
+                                need_redraw: true,
+                                items: [
+                                    circle.layer(lchess)
+                                        .fill("#ffffff66").stroke("#aaaaaa66", 0.5, 0.5)
+                                        .pos(cell_size / 2, cell_size / 2)
+                                        .radius(16)(),
+                                ],
+                            })
+                    })()
             ).collect
         ).collect.flat().filter(v => v),
     ),
@@ -37,11 +49,33 @@ sketch.layers(layers_count).shapes(
                 circle.layer(lchess)
                     .fill("#ffffff").stroke("#aaaaaa", 0.5, 0.5)
                     .pos(x * cell_size, y * cell_size)
-                    .radius(16)() :
+                    .radius(16)
+                    .area({
+                        need_redraw: true,
+                        cursor: "default",
+                        items: [
+                            text.layer(lchess)
+                                .content("HOVER")
+                                .color("#000000")
+                                .pos(16, 16)
+                                .center()(),
+                        ],
+                    })() :
                 circle.layer(lchess)
-                    .fill("#444444").stroke("#66666", 0.5, 0.5)
+                    .fill("#444444").stroke("#666666", 0.5, 0.5)
                     .pos(x * cell_size, y * cell_size)
-                    .radius(16)()
+                    .radius(16)
+                    .area({
+                        need_redraw: true,
+                        cursor: "default",
+                        items: [
+                            text.layer(lchess)
+                                .content("HOVER")
+                                .color("#ffffff")
+                                .pos(16, 16)
+                                .center()(),
+                        ],
+                    })()
         )
     ).flat().filter(v => v),
     text.layer(lboard)

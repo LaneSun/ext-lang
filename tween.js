@@ -1,4 +1,4 @@
-// JS语言拓展库 - Tween拓展
+// JS语言拓展库 - 动画与时间处理拓展
 // Gen 1
 
 // ease functions
@@ -45,6 +45,7 @@ export class Tweener {
         this.target = opts.value ?? 0;
         this.updater = updater;
         this.timer = null;
+        this.value = null;
         this.set(this.target);
     }
     _update() {
@@ -67,7 +68,7 @@ export class Tweener {
             if (start !== end) {
                 const dur = this.duration * abs(end - start);
                 this.direction = start < end;
-                this.timer = Timer(
+                this.timer = timer(
                     dur,
                     t => {
                         const d = this.ease_fn(t / dur);
@@ -84,41 +85,56 @@ export class Tweener {
     }
 }
 
-export const Timer = (duration, updater, end = () => {}) => {
+export const tweener = (updater, duration = 300, value = 0, ease_fn = ease_out_circ) =>
+    new Tweener(updater, {duration, value, ease_fn});
+
+export const tween = (updater, duration = 300, ease_fn = ease_out_circ) => new Promise(res => {
+    const {start} = timer(duration, t => updater(ease_fn(t / duration)), res);
+    start();
+});
+
+export const timer = (duration, updater = null, end = null) => {
     let start_t = null;
+    let finish_h = null;
     let rid = null;
-    const tick = t => {
+    const tick = async t => {
         const dur = max(0, t - start_t);
         if (dur < duration) {
-            updater(dur);
+            if (updater) await updater(dur);
             rid = requestAnimationFrame(tick);
         } else {
-            updater(duration);
+            await updater(duration);
             rid = null;
-            end();
+            if (end)
+                finish_h(end(true));
+            else
+                finish_h();
+            finish_h = null;
         }
     };
-    const start = () => {
+    const start = (finish = null) => {
         stop();
+        finish_h = finish;
         start_t = performance.now();
         tick(start_t);
         return obj;
     };
     const stop = () => {
         if (rid !== null) cancelAnimationFrame(rid);
+        rid = null;
+        if (finish_h !== null) {
+            if (end)
+                finish_h(end(false));
+            else
+                finish_h();
+            finish_h = null;
+        }
         return obj;
     };
-
-    const obj = { start, stop };
-    return obj;
+    return {start, stop};
 };
 
-export const Tween = (duration, updater, ease_fn = ease_out_circ) => new Promise(res => {
-    const {start} = Timer(duration, t => updater(ease_fn(t / duration)), res);
-    start();
-});
-
-export const Throttle = (duration, handle) => {
+export const throttle = (duration, handle) => {
     let timer = null;
     let pending = null;
     const on_time_end = () => {
@@ -139,3 +155,5 @@ export const Throttle = (duration, handle) => {
     };
     return request;
 };
+
+globalThis.assign({tweener, tween, timer, throttle});

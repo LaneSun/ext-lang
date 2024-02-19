@@ -159,6 +159,14 @@ ext_alias(Object.prototype, {
         console.countReset(label);
         return this;
     },
+    assert(...msg) {
+        console.assert(this, ...msg);
+        return this;
+    },
+    equal(value, ...msg) {
+        console.assert(this === value, this, "≠", value, ...msg);
+        return this;
+    },
     to(type) {
         return type.from(this);
     },

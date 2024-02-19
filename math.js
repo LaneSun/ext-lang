@@ -40,6 +40,9 @@ ext_alias(Array.prototype, {
             this[3] + y,
         ];
     },
+    rect_has(x, y) {
+        return this[0] <= x && x <= this[2] && this[1] <= y && y <= this[3]
+    },
 });
 
 ext_reader(Array.prototype, {

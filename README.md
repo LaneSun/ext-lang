@@ -207,6 +207,121 @@ Array.rect_move(Number<x>, Number<y>) => Array<rect>
 // 将矩形盒每个边扩张对应大小（可以是负数）
 Array.rect_grow(Number<left>, Number<top> = <left>, Number<right> = <left>, Number<bottom> = <top>)
     => Array<rect>
+
+// 检测某个点是否在矩形内部 (包含边界)
+Array.rect_has(Number<x>, Number<y>) => Boolean
+```
+
+### String
+
+#### 字符串相关
+
+```ts
+// 从字符串首部删去匹配的字符串，最多删除 max_count 次
+String.trim_end(str: String, max_count = Infinity) => String
+
+// 从字符串尾部删去匹配的字符串，最多删除 max_count 次
+String.trim_start(str: String, max_count = Infinity) => String
+
+// 从字符串首尾两端删去匹配的字符串，分别最多删除 max_count_start, max_count_end 次
+String.trim_both(str: String, max_count_start = Infinity, max_count_end = max_count_start) => String
+```
+
+#### 路径和URL相关
+
+```ts
+// 获取当前路径的父级路径（无尾部 /）（不存在时返回空字符串）
+String.path_dir => String
+
+// 获取当前路径的最后一个部分（包含后缀的文件名）
+String.path_base => String
+
+// 获取当前路径的后缀（包含 .）（不存在时返回空字符串）
+String.path_ext => String
+
+// 获取当前路径的最后部分的名字（无后缀的文件名）（不存在时返回空字符串）
+String.path_name => String
+
+// 判断当前路径是否为绝对路径（也检测形如 xxx:// 的 URL 头部）
+String.path_is_abs => Boolean
+
+// 拼接路径（如果中间出现绝对路径则会重新定位路径）
+String.path_join(...parts: String) => String
+```
+
+### Tween
+
+#### 动画和缓动相关
+
+Tween 导出了一组滑动函数用于基本的动画处理，形式如下:
+
+```ts
+// 将时间 t 映射到一个滑动的权重值 v
+// t 在 0 ~ 1（两端包含）区间内，
+// 而对于大多数滑动函数 v 也在 0 ~ 1（两端包含）区间内（某些弹跳函数例外）
+t:Number => v:Number
+```
+
+导出的滑动函数包含以下几个:
+
+- `linear`
+- `ease_in_out_sine`
+- `ease_in_out_cubic`
+- `ease_in_back`
+- `ease_out_back`
+- `ease_in_out_back`
+- `ease_in_circ`
+- `ease_out_circ`
+- `ease_in_out_circ`
+- `ease_in_bounce`
+- `ease_out_bounce`
+- `ease_in_out_bounce`
+
+额外动画工具函数:
+
+```ts
+// 创建一个 Tweener
+// updater: 每次滑动权重更新时调用的回调函数，传入权重值，在创建时被调用一次
+// duration: 动画从 0 时刻到 1 时刻的耗时，毫秒单位
+// value: 动画开始的初始时刻
+// ease_fn: 将时刻映射到滑动权重所使用的滑动函数
+tweener(updater, duration = 300, value = 0, ease_fn = ease_out_circ)
+    => Tweener
+
+// 创建一次性缓动效果发生器并立刻触发
+// 相当于一次性的 Tweener, 时间从 0 滑动到 1
+// 返回一个直到缓动结束的 Promise
+tween(updater, duration = 300, ease_fn = ease_out_circ) => Promise
+
+// 创建一个每帧更新的计时器，不立刻触发，可复用
+//
+// duration: 计时器执行的总时长，最终可能超过这个时间
+// updater: 每帧更新时调用的回调函数，传入参数为经过的时间
+//          这个参数被钳制到 0 ~ 1（两端包含）之间
+//          可以是异步函数
+// end: 当计时器结束时调用的回调函数，
+//      如果有返回值会成为 finish 的传入值
+//      当超时停止时传入 true，被 stop 或 start 停止时传入 false
+//      必须是同步函数
+//
+// 返回一个包含 start, end 两个方法的对象
+// start: 启动计时器，如果当前已经在启动状态则立即停止
+//        可以使用 wait 转换为 Promise
+// end: 立即停止计时器
+timer(duration, updater = null, end: is_timeout => Any = null) => {
+    start(finish: end_result => void),
+    stop(),
+}
+
+// 创建一个节流器
+// 用于保证每两次句柄调用之间的间隔时间不低于 duration
+// 间隔过低的调用被抛弃，同时，保证最后一次调用不被抛弃
+//
+// duration: 每两次操作之间的最小间隔
+// handle: 被节流的句柄
+//
+// 返回一个函数，每次被调用会被节流后原样送入 handle
+throttle(duration, handle) => (...arg) => void
 ```
 
 ### Color
@@ -341,8 +456,12 @@ Elem.update_mut(
 ) => Function
 ```
 
-### Luth
+### Luth (Ext)
 
 Luth 库用于高级文本解析，使用递归下降解析方法，是一个正则表达式的代换工具箱
+
+通过 Ext-Lang 引入 Luth 时，luth-words 的内容以及 `Word`, `TraitWord` 被导出到了全局
+
+另外 Ext-Lang 也额外为 String 和 RegExp 类型实现了 TraitWord 接口，所以在使用 Luth 时可以省去 `str`, `reg`
 
 详细参考请移步 [Luth](https://github.com/LaneSun/luth) 仓库查看

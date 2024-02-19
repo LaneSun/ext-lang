@@ -5,10 +5,19 @@ import "../all.js";
 import "../ext-lib/sketch.js";
 
 const [lbg, lmain, lui, layers_count] = INF;
+const size = 8;
+const cell_size = 40
 
-const [skt] = sketch.layers(layers_count)(
-    rect.pos(100, 100).size(10, 10)(),
-    rect.pos(200, 200).size(100, 100)(),
-).attach(document.body);
+const [skt] = sketch.layers(layers_count).shapes(
+    ...(size).map(x =>
+        (size).map(y =>
+            (x + y) % 2 === 0 ?
+                rect.pos(cell_size * x, cell_size * y).size(cell_size, cell_size)() :
+                null
+        ).collect
+    ).collect.flat().filter(v => v),
+    // rect.pos(100, 100).size(10, 10)(),
+    // rect.pos(200, 200).size(100, 100)(),
+)().attach(document.body);
 
 </script>

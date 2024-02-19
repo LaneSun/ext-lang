@@ -3,9 +3,33 @@
 
 import "../dom.js";
 
+const _cvt_shape = obj =>
+    obj instanceof Shape ? obj :
+     typeof obj === "string" || typeof obj === "number" ? text().content(obj.toString()) :
+    new Shape();
+
 const sketch_style = {
     position: "relative",
 };
+const sketch_listener = elem => ({
+    mousemove(event) {
+        const {offsetX: x, offsetY: y} = event;
+        let carea = null;
+        for (const area of this.areas) {
+            if (area.rect.rect_has(x, y)) {
+                carea = area;
+            }
+        }
+        if (this.cur_area?.opt !== carea?.opt) {
+            let need_redraw = carea?.opt.need_redraw || this.cur_area?.opt.need_redraw
+            this.style.cursor = carea ? (carea.opt.cursor ?? "pointer") : null;
+            if (carea) carea.shape.changed = true;
+            if (this.cur_area) this.cur_area.shape.changed = true;
+            this.cur_area = carea;
+            if (need_redraw) elem.update(this);
+        }
+    },
+});
 const sketch_cav_class = "skt-cav";
 const sketch_cav_style = {
     position: "absolute",
@@ -18,10 +42,13 @@ export class Sketch extends Elem {
     rshapes = [];
     constructor(...items) {
         super("div", ...items);
-        this.style(sketch_style);
+        this
+            .style(sketch_style)
+            .on(sketch_listener(this));
+        this.dupdate = Sketch.update_redraw;
     }
     shapes(...shapes) {
-        this.rshapes = this.rshapes.concat(shapes);
+        this.rshapes = this.rshapes.concat(shapes.map(_cvt_shape));
         return this;
     }
     layers(count = 1) {
@@ -47,7 +74,11 @@ export class Sketch extends Elem {
     }
     get_inner_rect(ctx) {
         if (this.rshapes.length >= 0)
-            return this.rshapes.map(s => s.get_contain_rect(ctx)).reduce((a, b) => a.rect_merge(b))
+            return this.rshapes
+                .map(s => s
+                    .get_contain_rect(ctx)
+                    .rect_move(...s.get_spos(ctx)))
+                .reduce((a, b) => a.rect_merge(b));
         else
             return [0, 0, 0, 0];
     }
@@ -55,6 +86,7 @@ export class Sketch extends Elem {
         return this.get_inner_rect(ctx);
     }
     clear(ctx) {
+        ctx.areas = [];
         for (const c of ctx.sketch_contexts) {
             const cav = c.canvas;
             c.clearRect(0, 0, cav.width, cav.height);
@@ -77,6 +109,7 @@ export class Sketch extends Elem {
         }
         for (const shape of this.rshapes) shape.draw(ctx);
         for (const c of ctx.sketch_contexts) c.restore();
+        ctx.sketch_container.areas = ctx.areas;
         return this;
     }
     redraw(ctx) {
@@ -86,22 +119,28 @@ export class Sketch extends Elem {
     }
     _create(ctx) {
         const res = super._create(ctx);
+        this.clear(ctx);
         this.draw(ctx);
         return res;
     }
-    _update(elem, ctx, dupdate) {
-        const res = super._update(elem, ctx, dupdate);
-        this.redraw(ctx);
-        return res;
-    }
+
+    static update_redraw = (self, elem, ctx, dupdate) => {
+        self.redraw(ctx);
+        return elem;
+    };
 }
 
 export class Shape {
+    rarea = [];
     rlayer = 0;
     rpos = [0, 0];
     rcenter = [0, 0];
+    changed = true;
+    ccontain_rect = null;
+    cspos = null;
+    crect = null;
     constructor(...shapes) {
-        this.shapes = shapes;
+        this.shapes = shapes.map(_cvt_shape);
     }
     layer(layer = 0) {
         this.rlayer = layer;
@@ -115,25 +154,59 @@ export class Shape {
         this.rcenter = [x, y];
         return this;
     }
+    area(...opts) {
+        for (const opt of opts)
+            if (opt.items) opt.items = opt.items.map(_cvt_shape);
+        this.rarea.push(...opts);
+        return this;
+    }
+    get_shapes(ctx) {
+        let shapes = this.shapes;
+        for (const opt of this.rarea) {
+            if (ctx.sketch_container.cur_area?.opt === opt) {
+                if (opt.items) shapes = shapes.concat(opt.items);
+            }
+        }
+        return shapes;
+    }
     get_spos(ctx) {
-        const size = this._get_size();
-        return [this.rpos[0] - this.rcenter[0] * size[0], this.rpos[1] - this.rcenter[1] * size[1]];
+        if (this.changed) {
+            const size = this._get_size();
+            this.cspos = [this.rpos[0] - this.rcenter[0] * size[0], this.rpos[1] - this.rcenter[1] * size[1]];
+        }
+        return this.cspos;
     }
     get_contain_rect(ctx) {
-        return this.shapes
-            .map(s => s.get_contain_rect(ctx))
-            .reduce((a, b) => a.rect_merge(b), this.get_rect(ctx))
-            .rect_move(...this.get_spos(ctx));
+        if (this.changed)
+            this.ccontain_rect = this.get_shapes(ctx)
+                .map(s => s
+                    .get_contain_rect(ctx)
+                    .rect_move(...s.get_spos(ctx)))
+                .reduce((a, b) => a.rect_merge(b), this.get_rect(ctx));
+        return this.ccontain_rect;
     }
     get_rect(ctx) {
-        return [0, 0, ...this._get_size(ctx)];
+        if (this.changed)
+            this.crect = [0, 0, ...this._get_size(ctx)]
+        return this.crect;
+    }
+    get_pen(ctx) {
+        return ctx.sketch_contexts[this.rlayer];
     }
     draw(ctx) {
         const [sx, sy] = this.get_spos(ctx);
         for (const c of ctx.sketch_contexts) c.translate(sx, sy);
-        this._draw(ctx.sketch_contexts[this.rlayer], ctx);
-        for (const shape of this.shapes) shape.draw(ctx);
+        this._draw(ctx);
+        for (const shape of this.get_shapes(ctx)) shape.draw(ctx);
+        for (const opt of this.rarea) {
+            var mat = this.get_pen(ctx).getTransform();
+            var rect = this.get_rect(ctx).rect_move(mat.e, mat.f);
+            ctx.areas.push({
+                rect, opt, shape: this,
+            });
+        }
         for (const c of ctx.sketch_contexts) c.translate(-sx, -sy);
+        this.changed = false;
         return this;
     }
     _get_size(ctx) {
@@ -164,7 +237,8 @@ class ShapePath extends Shape {
         else
             return super.get_contain_rect(ctx);
     }
-    _draw(pen, ctx) {
+    _draw(ctx) {
+        const pen = this.get_pen(ctx);
         if (this.rshadow) {
             pen.save();
             pen.shadowColor = this.rshadow[0];
@@ -174,14 +248,14 @@ class ShapePath extends Shape {
         }
         if (this.rfill) {
             pen.fillStyle = this.rfill;
-            pen.fill(this._get_fill_path(pen, ctx));
+            pen.fill(this._get_path(0, pen, ctx));
         }
+        if (this.rshadow) pen.restore();
         if (this.rstroke) {
             pen.strokeStyle = this.rstroke[0];
             pen.lineWidth = this.rstroke[1] + this.rstroke[2];
-            pen.stroke(this._get_stroke_path((this.rstroke[1] - this.rstroke[2]) / 2, pen, ctx));
+            pen.stroke(this._get_path((this.rstroke[1] - this.rstroke[2]) / 2, pen, ctx));
         }
-        if (this.rshadow) pen.restore();
     }
 }
 
@@ -194,12 +268,7 @@ class ShapeRect extends ShapePath {
     _get_size() {
         return this.rsize;
     }
-    _get_fill_path() {
-        const path = new Path2D();
-        path.rect(0, 0, ...this.rsize);
-        return path;
-    }
-    _get_stroke_path(offset) {
+    _get_path(offset) {
         const path = new Path2D();
         path.rect(...[0, 0, ...this.rsize].rect_grow(offset).rect_box);
         return path;
@@ -216,13 +285,7 @@ class ShapeCicle extends ShapePath {
     _get_size() {
         return [this.rradius * 2, this.rradius * 2];
     }
-    _get_fill_path() {
-        const radius = this.rradius;
-        const path = new Path2D();
-        path.arc(radius, radius, radius, 0, TAU);
-        return path;
-    }
-    _get_stroke_path(offset) {
+    _get_path(offset) {
         const radius = this.rradius;
         const path = new Path2D();
         path.arc(radius, radius, radius + offset, 0, TAU);
@@ -263,20 +326,12 @@ class ShapeText extends Shape {
     _apply_style(pen) {
         pen.font = this.rfont;
     }
-    _get_fill_path() {
-        const path = new Path2D();
-        path.rect(0, 0, ...this.rsize);
-        return path;
-    }
-    _get_stroke_path(offset) {
-        const path = new Path2D();
-        path.rect(...[0, 0, ...this.rsize].rect_grow(offset).rect_box);
-        return path;
-    }
-    _draw(pen, ctx) {
+    _draw(ctx) {
+        const pen = this.get_pen(ctx);
         pen.save();
         this._apply_style(pen);
         pen.fillStyle = this.rcolor;
+        // pen.fillText(Math.random(), this.rmetrics.actualBoundingBoxLeft, this.rmetrics.actualBoundingBoxAscent);
         pen.fillText(this.rcontent, this.rmetrics.actualBoundingBoxLeft, this.rmetrics.actualBoundingBoxAscent);
         pen.restore();
     }

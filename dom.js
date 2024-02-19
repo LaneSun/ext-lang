@@ -51,8 +51,11 @@ export class Elem {
     id(did) {
         return this.assign({did});
     }
-    on(event, handle) {
-        this.events.push([event, handle]);
+    on(event, handle = null) {
+        if (event instanceof Object)
+            this.events.push(...event.entries());
+        else
+            this.events.push([event, handle]);
         return this;
     }
     on_make(...handle) {
@@ -122,7 +125,7 @@ export class Elem {
         return [this._update(_to_node(elem), ctx, dupdate), ctx];
     }
     _update(elem, ctx, dupdate) {
-        self.bind_var(elem, ctx);
+        this.bind_var(elem, ctx);
         const rupdate = this.dupdate ?? dupdate;
         return rupdate(this, elem, ctx, dupdate);
     }
