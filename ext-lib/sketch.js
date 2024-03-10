@@ -40,8 +40,10 @@ const sketch_cav_style = {
 export class Sketch extends Elem {
     layers_count = 1;
     rshapes = [];
+    rpadding = 0;
     constructor(...items) {
         super("div", ...items);
+        this.handles_draw = [];
         this
             .style(sketch_style)
             .on(sketch_listener(this));
@@ -51,8 +53,20 @@ export class Sketch extends Elem {
         this.rshapes = this.rshapes.concat(shapes.map(_cvt_shape));
         return this;
     }
+    reshapes(...shapes) {
+        this.rshapes = shapes.map(_cvt_shape);
+        return this;
+    }
     layers(count = 1) {
         this.layers_count = count;
+        return this;
+    }
+    padding(radius = 0) {
+        this.rpadding = radius;
+        return this;
+    }
+    on_draw(...handle) {
+        this.handles_draw.push(...handle);
         return this;
     }
     make(...children) {
@@ -73,17 +87,19 @@ export class Sketch extends Elem {
                 .map(e => e.context);
     }
     get_inner_rect(ctx) {
-        if (this.rshapes.length >= 0)
+        if (this.rshapes.length > 1)
             return this.rshapes
                 .map(s => s
                     .get_contain_rect(ctx)
                     .rect_move(...s.get_spos(ctx)))
                 .reduce((a, b) => a.rect_merge(b));
+        else if (this.rshapes.length === 1)
+            return this.rshapes[0].get_content_rect(ctx).rect_move(...this.rshapes[0].get_spos(ctx));
         else
             return [0, 0, 0, 0];
     }
     get_content_rect(ctx) {
-        return this.get_inner_rect(ctx);
+        return this.get_inner_rect(ctx).rect_grow(this.rpadding);
     }
     clear(ctx) {
         ctx.areas = [];
@@ -94,6 +110,7 @@ export class Sketch extends Elem {
         return this;
     }
     draw(ctx) {
+        for (const handle of this.handles_draw) handle(ctx.sketch_container, ctx, this);
         const rect = this.get_content_rect(ctx);
         const size = rect.rect_size;
         ctx.sketch_container.style.assign({
@@ -119,13 +136,16 @@ export class Sketch extends Elem {
     }
     _create(ctx) {
         const res = super._create(ctx);
-        this.clear(ctx);
-        this.draw(ctx);
+        setTimeout(() => {
+            this.redraw(ctx);
+        }, 0);
         return res;
     }
 
     static update_redraw = (self, elem, ctx, dupdate) => {
-        self.redraw(ctx);
+        setTimeout(() => {
+            self.redraw(ctx);
+        }, 0);
         return elem;
     };
 }
@@ -187,7 +207,7 @@ export class Shape {
     }
     get_rect(ctx) {
         if (this.changed)
-            this.crect = [0, 0, ...this._get_size(ctx)]
+            this.crect = this._get_rect(ctx);
         return this.crect;
     }
     get_pen(ctx) {
@@ -208,6 +228,9 @@ export class Shape {
         for (const c of ctx.sketch_contexts) c.translate(-sx, -sy);
         this.changed = false;
         return this;
+    }
+    _get_rect(ctx) {
+        return [0, 0, ...this._get_size(ctx)];
     }
     _get_size(ctx) {
         return [0, 0];
@@ -256,6 +279,32 @@ class ShapePath extends Shape {
             pen.lineWidth = this.rstroke[1] + this.rstroke[2];
             pen.stroke(this._get_path((this.rstroke[1] - this.rstroke[2]) / 2, pen, ctx));
         }
+    }
+}
+
+class ShapeLine extends ShapePath {
+    rline = [];
+    rsize = [0, 0];
+    line(...poses) {
+        this.rline = poses;
+        return this;
+    }
+    _get_rect(ctx) {
+        const [wmin, wmax] = this.rline.reduce(([min, max], [x]) => ([Math.min(min, x), Math.max(max, x)]), [Infinity, -Infinity]);
+        const [hmin, hmax] = this.rline.reduce(([min, max], [, y]) => ([Math.min(min, y), Math.max(max, y)]), [Infinity, -Infinity]);
+        return [wmin, hmin, wmax, hmax];
+    }
+    _get_size(ctx) {
+        return this.get_rect(ctx).rect_size;
+    }
+    _get_path() {
+        const path = new Path2D();
+        const [spos, ...body] = this.rline;
+        path.moveTo(...spos);
+        for (const pos of body) {
+            path.lineTo(...pos);
+        }
+        return path;
     }
 }
 
@@ -337,11 +386,12 @@ class ShapeText extends Shape {
     }
 }
 
-export const sketch = ((...shapes) => new Sketch(...shapes)).later;
+export const sketch = ((...shapes) => (new Sketch()).shapes(...shapes)).later;
 export const shape = ((...shapes) => new Shape(...shapes)).later;
+export const line = ((...shapes) => new ShapeLine(...shapes)).later;
 export const rect = ((...shapes) => new ShapeRect(...shapes)).later;
 export const circle = ((...shapes) => new ShapeCicle(...shapes)).later;
 export const dot = ((...shapes) => new Shape(...shapes)).later;
 export const text = ((...shapes) => new ShapeText(...shapes)).later;
 
-globalThis.assign({Sketch, Shape, sketch, shape, rect, circle, dot, text});
+globalThis.assign({Sketch, Shape, sketch, shape, line, rect, circle, dot, text});

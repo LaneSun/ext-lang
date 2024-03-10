@@ -9,6 +9,10 @@ const _eql_node = (e, v) => v instanceof Node ? e === v : e.nodeValue === v;
 const _try_create = (item, ctx) => item instanceof Elem ? item.create(ctx)[0] : item;
 const _try_update = (item, elem, ctx, dupdate) => item instanceof Elem ? item._update(elem, ctx, dupdate) : item;
 const _update_children = (elem, children) => {
+    if (elem instanceof Text) {
+        elem.nodeValue = children.ll.join('');
+        return;
+    }
     if (elem.childNodes === children) return;
     const rchildren = [...elem.childNodes];
     children = _to_array(children);
@@ -36,6 +40,7 @@ export class Elem {
         this.dattrs = [];
         this.dclass = [];
         this.handles_make = [];
+        this.handles_update = [];
     }
     attrs(...attrs_list) {
         for (const attrs of attrs_list)
@@ -62,39 +67,58 @@ export class Elem {
         this.handles_make.push(...handle);
         return this;
     }
+    on_update(...handle) {
+        this.handles_update.push(...handle);
+        return this;
+    }
     class(...dclass) {
-        for (const klass of dclass) this.dclass.push(klass);
+        for (const klass of dclass) this.dclass.push(...klass.split(' '));
         return this;
     }
     style(...styles) {
         return this.assign({dstyle: (this.dstyle ?? {}).assign(...styles)});
     }
-    static(assert = true) {
+    ustatic(assert = true) {
         return assert ? this.assign({dupdate: Elem.update_static}) : this;
     }
-    dynamic(assert = true) {
+    ubind(assert = true) {
+        return assert ? this.assign({dupdate: Elem.update_bind}) : this;
+    }
+    uself(assert = true) {
+        return assert ? this.assign({dupdate: Elem.update_self}) : this;
+    }
+    uitems(assert = true) {
+        return assert ? this.assign({dupdate: Elem.update_items}) : this;
+    }
+    udynamic(assert = true) {
         return assert ? this.assign({dupdate: Elem.update_dynamic}) : this;
     }
-    remake(assert = true) {
+    uremake(assert = true) {
         return assert ? this.assign({dupdate: Elem.update_remake}) : this;
     }
-    const(assert = true) {
+    uconst(assert = true) {
         return assert ? this.assign({dupdate: Elem.update_const}) : this;
     }
-    mut(mut_self = Elem.mut_self_const, mut_items = Elem.mut_items_by_pos) {
+    umut(mut_self = Elem.mut_self_const, mut_items = Elem.mut_items_by_pos) {
         return this.assign({dupdate: Elem.update_mut(mut_self, mut_items)});
     }
+    _make(e, ...children) {
+        if (this.did) e.id = this.did;
+        if (this.duid) e.uid = this.duid;
+        if (this.dstyle) {
+            e.style.assign(this.dstyle);
+            for (const [key, value] of this.dstyle.entries())
+                if (key.startsWith("--")) e.style.setProperty(key, value);
+        }
+        for (const [event, handle] of this.events) e.addEventListener(event, handle);
+        for (const [key, value] of this.dattrs) e.setAttribute(key, value);
+        if (this.dclass.length) e.classList.add(...this.dclass);
+        e.append(...children);
+        for (const handle of this.handles_make) handle(e, this);
+        return e;
+    }
     make(...children) {
-        return document.createElement(this.name).let(e => {
-            if (this.did) e.id = this.did;
-            if (this.duid) e.uid = this.duid;
-            e.style.assign(this.dstyle ?? {});
-            for (const [event, handle] of this.events) e.addEventListener(event, handle);
-            for (const [key, value] of this.dattrs) e.setAttribute(key, value);
-            if (this.dclass.length) e.classList.add(...this.dclass);
-            e.append(...children);
-            for (const handle of this.handles_make) handle(e, this);
-        });
+        return this._make(document.createElement(this.name), ...children);
     }
     bind_var(elem, ctx) {
         if (this.dvar) {
@@ -119,6 +143,7 @@ export class Elem {
         const children = this.items.map(item => _try_create(item, ctx));
         const e = this.make(...children);
         this.bind_var(e, ctx);
+        for (const handle of this.handles_update) handle(e, ctx, this);
         return [e, ctx];
     }
     update(elem, dupdate = Elem.update_static, ctx = []) {
@@ -127,7 +152,9 @@ export class Elem {
     _update(elem, ctx, dupdate) {
         this.bind_var(elem, ctx);
         const rupdate = this.dupdate ?? dupdate;
-        return rupdate(this, elem, ctx, dupdate);
+        const e = rupdate(this, elem, ctx, dupdate);
+        for (const handle of this.handles_update) handle(e, ctx, this);
+        return e;
     }
 
     static update_static = (self, elem, ctx, dupdate) => {
@@ -137,8 +164,20 @@ export class Elem {
         return elem;
     };
 
+    static update_bind = (self, elem, ctx, dupdate) => {
+        const children = [self.items, [...elem.childNodes]].group_map(([item, e]) =>
+            e ? _try_update(item, e, ctx, dupdate) : _try_create(item, ctx));
+        elem = self._make(elem, ...children);
+        return elem;
+    };
+
     static update_self = (self, elem, ctx, dupdate) => {
         elem = self.make(...elem.childNodes).let(e => elem.replaceWith(e));
+        return elem;
+    };
+
+    static update_items = (self, elem, ctx, dupdate) => {
+        _update_children(elem, self.items.map(item => _try_create(item, ctx)));
         return elem;
     };
 
